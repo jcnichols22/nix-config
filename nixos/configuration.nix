@@ -133,4 +133,11 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
 
+
+  services.tailscale.enable = true;
+  # Example of using routing features:
+services.tailscale.useRoutingFeatures = "server"; # "client", or "both" as needed
+
+
+
 }
