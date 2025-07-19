@@ -2,33 +2,34 @@
   description = "System configuration for NixOS with home-manager and flakes";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05"; # Use stable release
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     flake-utils.url = "github:numtide/flake-utils";
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
-      # Choose the latest matching your NixOS version, change release if needed
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs = { self, nixpkgs, flake-utils, home-manager, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+    in
     flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        };
-      in {
-        packages.default = pkgs.hello; # Example placeholder
+      {
+        packages.default = pkgs.hello;
       }
     ) // {
 
+      # ✅ NixOS system configuration
       nixosConfigurations = {
         nixos = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
             ./nixos/configuration.nix
-            # Home Manager as a NixOS module:
             home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;
@@ -39,6 +40,15 @@
         };
       };
 
+      # ✅ Standalone Home Manager configuration for Ubuntu (and other Linux distros)
+      homeConfigurations = {
+        josh = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            ./home/josh/home.nix
+          ];
+        };
+      };
+
     };
 }
-
