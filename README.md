@@ -18,7 +18,6 @@ This repository contains a modular, [nix flakes](https://nixos.wiki/wiki/Flakes)
 - 💻 VSCode (with extension support coming)
 - 📡 Tailscale networking (server support)
 - 🔉 PipeWire audio stack
-- 💾 Shared dotfiles (via `home-manager`)
 - ⚙️ Flake-driven reproducibility
 
 ---
@@ -125,9 +124,6 @@ nix run home-manager/release-25.05 -- init
 Defined in `packages/default.nix`:
 
 ```plaintext
-{ pkgs }:
-
-with pkgs; [
 brave
 obsidian
 vscode
@@ -135,7 +131,7 @@ _1password-gui
 tailscale
 vim
 wget
-]
+waveterm
 ```
 
 - 👥 Used in both: NixOS system config + Ubuntu via `home-manager`
@@ -188,10 +184,10 @@ modules = [
 ## 🧩 Customization Ideas
 
 - VSCode extensions config via home-manager
-- Wave Terminal package overlay
 - Separate flakes per role (dev, media, server)
 - Add GitHub Actions to run `nix flake check`
 - macOS support via `darwinConfigurations`
+- 💾 Shared dotfiles (via `home-manager`)
 
 ---
 
