@@ -1,54 +1,66 @@
 {
-  description = "System configuration for NixOS with home-manager and flakes";
+  description = "Unified NixOS + Ubuntu config with Home Manager";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";  # Stable Nixpkgs
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, home-manager, ... }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, ... }:
     let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
+      lib = nixpkgs.lib;
+
+      # Helper to get pkgs with unfree enabled
+      pkgsFor = system: import nixpkgs {
         inherit system;
         config.allowUnfree = true;
       };
-    in
-    flake-utils.lib.eachDefaultSystem (system:
-      {
-        packages.default = pkgs.hello;
-      }
-    ) // {
 
-      # ✅ NixOS system configuration
+      # Shared app list across systems
+      sharedPackages = system: import ./packages/default.nix {
+        pkgs = pkgsFor system;
+      };
+
+    in {
+
       nixosConfigurations = {
-        nixos = nixpkgs.lib.nixosSystem {
+        nixos = lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
-            ./nixos/configuration.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.josh = import ./home/josh/home.nix;
-            }
+            ./hosts/nixos/configuration.nix
+            ./modules/system-settings.nix
+            ./modules/audio.nix
+            ./modules/desktop/plasma.nix
+            ./modules/networking/tailscale.nix
+            ./modules/users.nix
+            ./hosts/nixos/hardware-configuration.nix
           ];
         };
       };
 
-      # ✅ Standalone Home Manager configuration for Ubuntu (and other Linux distros)
       homeConfigurations = {
-        josh = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
+        ubuntu = home-manager.lib.homeManagerConfiguration {
+          pkgs = pkgsFor "x86_64-linux";
+          homeDirectory = "/home/josh";
+          username = "josh";
+
           modules = [
-            ./home/josh/home.nix
+            ./hosts/ubuntu/home.nix
+
+            # Optional: shared users module
+            ./modules/users.nix
+
+            # Inject shared apps via a module
+            ({ pkgs, ... }: {
+              home.packages = sharedPackages "x86_64-linux";
+            })
           ];
         };
       };
-
     };
 }
