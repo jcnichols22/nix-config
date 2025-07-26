@@ -4,6 +4,7 @@ with pkgs; [
   vim
   wget
   tailscale
+  git
 
   # required apps
   brave
