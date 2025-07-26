@@ -39,6 +39,7 @@
             ./modules/networking/tailscale.nix
             ./modules/users.nix
             ./hosts/nixos/hardware-configuration.nix
+            ./modules/openrgb.nix
           ];
         };
       };
